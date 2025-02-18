@@ -1,0 +1,32 @@
+from flask import Flask, render_template, request, jsonify, session, redirect
+import sqlite3
+
+app = Flask(__name__)
+app.secret_key = "your_secret_key"
+
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password"
+
+COMPETITION_NAME = "Diction Drill Brain Quest (D.D.B.Q)"
+
+# Initialize database
+def init_db():
+    with sqlite3.connect("scores.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS players (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name TEXT UNIQUE,
+                            score INTEGER DEFAULT 0,
+                            competition TEXT DEFAULT ?)''', (COMPETITION_NAME,))
+        conn.commit()
+
+init_db()
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+# Other routes remain unchanged...
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0")
