@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D.D.B.Q Scoreboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body class="container mt-4">
+    <h2 class="text-center">Diction Drill Brain Quest (D.D.B.Q) Scoreboard</h2>
+
+    <!-- Scoreboard Table -->
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody id="scoreboard">
+            <!-- Scores will be loaded here -->
+        </tbody>
+    </table>
+
+    <!-- Admin Login Form -->
+    <div id="login-section" class="mt-4">
+        <h4>Admin Login</h4>
+        <input type="text" id="username" class="form-control my-2" placeholder="Username">
+        <input type="password" id="password" class="form-control my-2" placeholder="Password">
+        <button onclick="login()" class="btn btn-primary">Login</button>
+    </div>
+
+    <!-- Admin Panel (Hidden until login) -->
+    <div id="admin-panel" class="mt-4" style="display: none;">
+        <h4>Admin Controls</h4>
+        <input type="text" id="player-name" class="form-control my-2" placeholder="Player Name">
+        <input type="number" id="player-score" class="form-control my-2" placeholder="Score">
+        <button onclick="updateScore()" class="btn btn-success">Update Score</button>
+        <button onclick="resetLeaderboard()" class="btn btn-danger">Reset Leaderboard</button>
+        <button onclick="logout()" class="btn btn-secondary">Logout</button>
+    </div>
+
+    <script>
+        function loadScores() {
+            $.get("/get_scores", function(data) {
+                let scoreboard = $("#scoreboard");
+                scoreboard.empty();
+                data.forEach((player, index) => {
+                    scoreboard.append(`<tr>
+                        <td>${index + 1}</td>
+                        <td>${player[0]}</td>
+                        <td>${player[1]}</td>
+                    </tr>`);
+                });
+            });
+        }
+
+        function login() {
+            let username = $("#username").val();
+            let password = $("#password").val();
+            $.ajax({
+                url: "/login",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ username, password }),
+                success: function(response) {
+                    alert(response.message);
+                    $("#login-section").hide();
+                    $("#admin-panel").show();
+                },
+                error: function() {
+                    alert("Invalid login credentials.");
+                }
+            });
+        }
+
+        function logout() {
+            $.post("/logout", function() {
+                alert("Logged out successfully.");
+                $("#admin-panel").hide();
+                $("#login-section").show();
+            });
+        }
+
+        function updateScore() {
+            let name = $("#player-name").val();
+            let score = $("#player-score").val();
+            $.ajax({
+                url: "/update_score",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ name, score }),
+                success: function(response) {
+                    alert(response.message);
+                    loadScores();
+                }
+            });
+        }
+
+        function resetLeaderboard() {
+            if (confirm("Are you sure you want to reset the leaderboard?")) {
+                $.post("/reset_leaderboard", function(response) {
+                    alert(response.message);
+                    loadScores();
+                });
+            }
+        }
+
+        $(document).ready(function() {
+            loadScores();
+        });
+    </script>
+</body>
+</html>
